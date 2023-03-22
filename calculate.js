@@ -1,158 +1,127 @@
-// Globale Variablen
+// decl - global variables
 let gi_sunrise_hr;
-let gi_sunrise_min;
 let gi_sundown_hr;
-let gi_sundown_min;
-
 let gi_sun_marker = 0; // 1= vor Sonnenaufgang; 2= vor Sonnenuntergang; 0= Nachts
 
-const gdb_latitude 	= 50.1; // Breitengrad (Dezimalgrad), am Beispiel Frankfurt a.M.
-const gi_midday_hr 	= 13; // Sommerzeit, rechnerischer Mittag (Symmetrieachse); am Beispiel von Frankfurt a.M.: 13:30 Uhr (Winterzeit wird ermittelt)
-const gi_midday_min 	= 30;
+// decl - global constants
+const gbool_testing	= true; 	// Test ausführen = true; Tests nicht ausführen = false
+const gi_max_sun_hr	= 17; 	// Maximale Tageslänge als Stundenzahl; am Beispiel Deutschland mit fast 17 Stunden im Juni (zu Testzwecken)
+const gi_night_hr 	= 3; 		// Uhrzeit zu der noch sicher Nacht ist; am Beispiel Deutschland
+const gdb_latitude 	= 50.1; 	// Breitengrad (Dezimalgrad); am Beispiel Frankfurt a.M.: 50.1
+const gi_midday_hr   = 11.5 + 2; // rechnerischer Mittag (Symmetrieachse) = 11.5 UTC; am Beispiel von Frankfurt a.M.: UTC+2
 
-// Umwandlung: Grad zu Radiand
+
+// returns the conversion of degrees to radians
 function to_radians(db_deg)
 {
-  return db_deg * Math.PI / 180;
+  return db_deg * Math.PI / 180; // Grad zu Radiand Umwandlung
 };
 
-// Sommer-(1)/Winterzeit(0)
+// returns summer (1) or winter time (0)
 Date.prototype.isdst=function()
 {  
   new Date(1).getTimezoneOffset() / 60;
-  return (((new Date(1).getTimezoneOffset() / 60)==(this.getTimezoneOffset() / 60))?0:1);
+  return (((new Date(1).getTimezoneOffset() / 60)==(this.getTimezoneOffset() / 60))?0:1); // im Vergleich ermittelt: Sommer-(1) oder Winterzeit(0)
 }
 
-//Tag im Jahr
+// returns the counted day of the year; e.g. 31.1. = 31, 1.2. = 32
 Date.prototype.yday=function()
 {  
-  let today = this.setHours(0,0,0,0);
-  let newyear = new Date(this.getFullYear(), 0, 1);
-  
-  // Testing
-  /* 
-    alert('today: '+today+
- 	     '\nnewyear: '+newyear+
- 	     '\nceil: '+Math.ceil((today - newyear) / (24*60*60*1000) + 1)
- 	     );
- 	*/
-  return Math.ceil((today - newyear) / (24*60*60*1000) + 1);
+  let today = this.setHours(0,0,0,0); // heute, als Tag ohne Berücksichtigung der Stunden
+  let newyear = new Date(this.getFullYear(), 0, 1); // Neujahrstag des aktuellen Jahres
+  return Math.ceil((today - newyear) / (24*60*60*1000) + 1); // Differenz als gezählter Tag
 }
 
 
 /*
-/  Gesamte Tageslänge, Sonnenauf- und -untergang berechnen
+/  Calculates total day length, sunrise and sunset
 /  
-/  i_day: 			der aktuelle Tag als Zahl, relativ zum 21.3. (Frühlingsanfang)
-/  i_tm_isdst: 	Marker für Winter- oder Sommerzeit; Winterzeit (0) / Sommerzeit (> 0)
-/  
-/  Hint: Diese Funktion kann auf korrekte Uhrzeitwerte getestet werden (gbool_run_test = 1)
+/  i_now_hr:		locale time in hr (+ min/60)!
+/  i_tm_yday: 		what day of the year?
+/  i_tm_isdst: 	summer (1) or winter time (0)? // Marker für Sommer- oder Winterzeit
 */
-function p_sun_hr_per_day(i_day, i_tm_isdst) {
-
-    // decl
-    let bool_errorcode = 0;
-
-    // sun declination
-    let db_sun_declination = Math.atan(Math.sin(2*Math.PI*(i_day/365))*Math.tan(to_radians(23.45))); // Deklination der Sonne, Näherung
-    let db_sun_hr = (((Math.asin(Math.sin(db_sun_declination)*Math.tan(to_radians(gdb_latitude)))) * 2 + Math.PI)/ (2 * Math.PI)) * 24; // Tageslänge, Näherung
-    //printf("Today's day length is about %d:%d h.\n", (int)db_sun_hr, (int)((db_sun_hr-(int)db_sun_hr) *60));
-    
-    
-    // sunrise
-    // Vorgehen: Tageslänge/2 (wird NICHT aufgerundet!); Minuten mit der Mittagszeit addieren; Überhang+Stunden -> von der Mittagszeit abziehen
-	 gi_sunrise_hr = gi_midday_hr-Math.floor(db_sun_hr/2);
-	 gi_sunrise_min = (db_sun_hr/2-Math.floor(db_sun_hr/2)) *60;
-	 
-	 if(gi_sunrise_min <= gi_midday_min){
-	 	gi_sunrise_min = gi_midday_min - gi_sunrise_min;
-	 } else{
-	 	gi_sunrise_min = gi_midday_min+60 - gi_sunrise_min;
-	 	gi_sunrise_hr = gi_sunrise_hr -1;
-	 };
-    
-    
-    // sundown
-    // Vorgehen: Zeit des Sonnenaufgangs + Tageslänge
-	 gi_sundown_hr = Math.floor(db_sun_hr) + gi_sunrise_hr;
-	 gi_sundown_min = gi_sunrise_min + Math.trunc((db_sun_hr-Math.floor(db_sun_hr))*60);
-	 
-	 if (gi_sundown_min >= 60){
-	 		gi_sundown_hr = gi_sundown_hr +1;
-	 		gi_sundown_min = gi_sundown_min - 60;
-	 };
-    
- 	 // correction
- 	 // Winterzeit-Korrektur, Winterzeit (tm_istdst == 0), Sommerzeit (tm_isdst > 0)
-    if(i_tm_isdst == 0){
-    		gi_sundown_hr = gi_sundown_hr-1;
-    		gi_sunrise_hr = gi_sunrise_hr-1;
- 	 };
- 	 
- 	 // Testing
- 	 /*
- 	   alert('i_day: '+i_day+
- 	     '\ndb_sun_declination: '+db_sun_declination+
- 	     '\ndb_sun_hr: '+db_sun_hr+
- 	     '\ni_tm_isdst: '+i_tm_isdst+
- 	     '\nfloor: '+Math.floor(db_sun_hr/2)+
- 	     '\nfloor: '+(db_sun_hr/2-Math.floor(db_sun_hr/2)) *60
- 	     );
-    */
-};
-
-
-/*
-/  Main
-/	i_now_hr 	- aktuelle Zeit, Stunde als Zahl
-/	i_now_min 	- aktuelle Zeit, Minute als Zahl
-/	i_tm_isdst 	- Sommer- oder Winterzeit
-/	i_tm_yday 	- Tag seit 1. Januar (0–365; 1. Januar = 0)
-*/
-function calculate_dates(i_now_hr, i_now_min, i_tm_isdst, i_tm_yday)
+Date.prototype.sun_hr_per_day=function()
 {
-    
-    // decl
-
-    // night
-    let i_night_hr = 3; // Uhrzeit, zu der noch sicher Nacht ist (in DE)
-
-    // day
-    let i_day = i_tm_yday - 80; // der aktuelle Tag als Zahl, relativ zum 21.3. (Frühlingsanfang, ohne Schaltjahr)
-    
-    // sunrise and -down
-    p_sun_hr_per_day(i_day, i_tm_isdst);
-    
-    // func
-    if((i_now_hr == gi_sunrise_hr && i_now_min < gi_sunrise_min) || (i_now_hr < gi_sunrise_hr && i_now_hr > i_night_hr)){
-        // Wenn VOR Sonnenaufgang und NICHT Nachts
-        gi_sun_marker = 1;
-    } else if((i_now_hr == gi_sundown_hr && i_now_min < gi_sundown_min) || (i_now_hr < gi_sundown_hr && i_now_hr > i_night_hr)){
-        // Wenn NACH Sonnenaufgang aber VOR Sonnenuntergang
-        gi_sun_marker = 2;
-    } else {
-        // Nachts
-        gi_sun_marker = 0;
-    };
-    
+	 
+	 //error handling
+	 try {
+		 
+	    // decl
+	    let bool_errorcode = 0;
+	    let i_now_hr = this.getHours() + this.getMinutes()/60 // aktuelle Zeit
+	    let i_tm_isdst = this.isdst();
+	    
+	    // Achtung: yday() setzt Zeit zurück auf 0 Uhr, darum zuletzt aufrufen!!!
+	    let i_day = this.yday() - 80; // der aktuelle Tag als Zahl, relativ zum 21.3. (Frühlingsanfang, ohne Schaltjahr)
+	
+	
+	    // sun declination
+	    let db_sun_declination = Math.atan(Math.sin(2*Math.PI*(i_day/365))*Math.tan(to_radians(23.45))); // Deklination der Sonne, Näherung
+	    let db_sun_hr = (((Math.asin(Math.sin(db_sun_declination)*Math.tan(to_radians(gdb_latitude)))) * 2 + Math.PI)/ (2 * Math.PI)) * 24; // Tageslänge, Näherung
+	    
+	    //testing day length
+	    if(gbool_testing && (db_sun_hr >= gi_max_sun_hr)){
+	    	alert('Attention: Today\'s day length is about '+Math.floor(db_sun_hr)+':'+
+	    	      Math.round((db_sun_hr-Math.floor(db_sun_hr)) *60).toString().padStart(2, '0')+
+	    	      ' h.\nPlease check the Input.');
+	    };
+	    
+	    // sunrise
+		 gi_sunrise_hr = gi_midday_hr- db_sun_hr/2;
+	    
+	    // sundown
+		 gi_sundown_hr = db_sun_hr + gi_sunrise_hr;
+		 
+	    
+	 	 // correction wintertime; winter (tm_istdst = 0) / summer (tm_isdst > 0)
+	    if(i_tm_isdst == 0){ 
+	    		gi_sundown_hr = gi_sundown_hr-1; // Winterzeit-Korrektur -1
+	    		gi_sunrise_hr = gi_sunrise_hr-1; // Winterzeit-Korrektur -1
+	 	 };
+	    
+	    
+	    // can we still see the sunrise, the sundown or is it night?
+	    if(i_now_hr <= gi_sunrise_hr && i_now_hr > gi_night_hr){
+	        // Wenn VOR Sonnenaufgang und NICHT Nachts
+	        gi_sun_marker = 1;
+	    } else if(i_now_hr <= gi_sundown_hr && i_now_hr > gi_night_hr){
+	        // Wenn NACH Sonnenaufgang aber VOR Sonnenuntergang
+	        gi_sun_marker = 2;
+	    } else {
+	        // Nachts
+	        gi_sun_marker = 0;
+	    };
+	 	 
+ 	 
+ 	 //error handling
+ 	 }catch(err) {
+ 	 	alert('Hi, im sorry to inform you that something went wrong.\n'
+ 	 			+'Where?: p_sun_hr_per_day('+i_day+', '+i_tm_isdst+')\n'
+ 	 			+'What?: '+ err.message);
+ 	 };
 };
+
 
 
 function generateDates() {
+	
+	//error handling
+	 try {
       
-      const heute = new Date();
+      const t_today = new Date();
       
-      // "It's now 17.3.2023, 12:57 h."
+      // Text: local date and time
       var p_now = document.createElement('p');
-      var myText = document.createTextNode('It\'s now '+heute.toLocaleString('de-DE')+' h.');
+      var myText = document.createTextNode('It\'s now '+t_today.toLocaleString('de-DE')+' h.');
       p_now.appendChild(myText);
       document.getElementById('col1').appendChild(p_now);
       
       
-      calculate_dates(heute.getHours(), heute.getMinutes(), heute.isdst(), heute.yday()); // Achtung: yday() setzt Zeit zurück auf 0 Uhr, darum zuletzt aufrufen!!!
+      //func
+      t_today.sun_hr_per_day();
       
       
-   	// <div class= "sundown"><img src="sun.png"></div>
+   	// Image of sunrise or -down
       var div_sun = document.createElement('div');
 	    switch(gi_sun_marker) {
 	       case 1: div_sun.setAttribute('class', 'sunrise');
@@ -167,25 +136,36 @@ function generateDates() {
       document.getElementById('col1').appendChild(div_sun);
       
     
-      // "Sunrise is today about at 06:41 h,<br/>sundown about at 18:20 h."
+      // Text: sunrise and -down time
       var p_sun = document.createElement('p');
-      var sunText = document.createTextNode('Sunrise is today about at '+gi_sunrise_hr+':'+Math.round(gi_sunrise_min)+' h,\nsundown about at '+gi_sundown_hr+':'+Math.round(gi_sundown_min)+' h.');
+      var sunText = document.createTextNode('Sunrise is today approx. at '+Math.floor(gi_sunrise_hr)+':'+
+      													Math.round((gi_sunrise_hr-Math.floor(gi_sunrise_hr))*60).toString().padStart(2, '0')+
+                                            ' h,\nsundown approx. at '+Math.floor(gi_sundown_hr)+':'+
+                                             Math.round((gi_sundown_hr-Math.floor(gi_sundown_hr))*60).toString().padStart(2, '0')+' h.');
       p_sun.appendChild(sunText);
       document.getElementById('col1').appendChild(p_sun);
       
-     //<p class="lettering">Sorry, you're too late to watch the sunrise today.<br/>But you have a chance to watch the sundown, it's also nice :)</p>
+     // Text: the leaflet (can I watch the sunrise or -down?)
       var p_lettering = document.createElement('p');
       p_lettering.setAttribute('class', 'lettering');
       switch(gi_sun_marker) {
 	       case 1: var LetterText = document.createTextNode('Congrats, you can watch the sunrise today :)');
 	       	break;
-	    	 case 2: var LetterText = document.createTextNode('Sorry, you\'re too late to watch the sunrise today.\nBut you have a chance to watch the sundown, it\'s also nice :)');
+	    	 case 2: var LetterText = document.createTextNode('Sorry, you\'re too late to watch the sunrise today.'+
+	    	 																  '\nBut you have a chance to watch the sundown, it\'s also nice :)');
 	    	   break;
 	    	 default:var LetterText = document.createTextNode('What ... is it exactly, your trying to do? (:');
 	    	   break;
 	    };
 	   p_lettering.appendChild(LetterText);
       document.getElementById('col2').appendChild(p_lettering);
+      
+ 	 //error handling
+ 	 }catch(err) {
+ 	 	alert('Hi, im sorry to inform you that something went wrong.\n'
+ 	 			+'Where?: generateDates)\n'
+ 	 			+'What?: '+ err.message);
+ 	 };
      
 };
 
