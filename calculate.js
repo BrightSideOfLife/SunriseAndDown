@@ -5,8 +5,8 @@ let gi_sun_marker = 0; // 1= vor Sonnenaufgang; 2= vor Sonnenuntergang; 0= Nacht
 
 // decl - global constants
 const gbool_testing	= true; 	// Test ausführen = true; Tests nicht ausführen = false
-const gi_max_sun_hr	= 17; 	// Maximale Tageslänge als Stundenzahl; am Beispiel Deutschland mit fast 17 Stunden im Juni (zu Testzwecken)
 const gi_night_hr 	= 3; 		// Uhrzeit zu der noch sicher Nacht ist; am Beispiel Deutschland
+const gi_max_sun_hr	= 17; 	// Maximale Tageslänge als Stundenzahl; am Beispiel Deutschland mit fast 17 Stunden im Juni (zu Testzwecken)
 const gdb_latitude 	= 50.1; 	// Breitengrad (Dezimalgrad); am Beispiel Frankfurt a.M.: 50.1
 const gi_midday_hr   = 11.5 + 2; // rechnerischer Mittag (Symmetrieachse) = 11.5 UTC; am Beispiel von Frankfurt a.M.: UTC+2
 
@@ -139,10 +139,10 @@ function generateDates() {
     
       // Text: sunrise and -down time
       var p_sun = document.createElement('p');
-      var sunText = document.createTextNode('Sunrise is today approx. at '+Math.floor(gi_sunrise_hr)+':'+
-      													Math.round((gi_sunrise_hr-Math.floor(gi_sunrise_hr))*60).toString().padStart(2, '0')+
-                                            ' h,\nsundown approx. at '+Math.floor(gi_sundown_hr)+':'+
-                                             Math.round((gi_sundown_hr-Math.floor(gi_sundown_hr))*60).toString().padStart(2, '0')+' h.');
+      var sunText = document.createTextNode('Sunrise is today approx. at '+Math.floor(gi_sunrise_hr)+':'
+      												 +Math.round((gi_sunrise_hr-Math.floor(gi_sunrise_hr))*60).toString().padStart(2, '0')
+                                           +' h,\nsundown approx. at '+Math.floor(gi_sundown_hr)+':'
+                                           +Math.round((gi_sundown_hr-Math.floor(gi_sundown_hr))*60).toString().padStart(2, '0')+' h.');
       p_sun.appendChild(sunText);
       document.getElementById('col1').appendChild(p_sun);
       
@@ -152,8 +152,8 @@ function generateDates() {
       switch(gi_sun_marker) {
 	       case 1: var LetterText = document.createTextNode('Congrats, you can watch the sunrise today :)');
 	       	break;
-	    	 case 2: var LetterText = document.createTextNode('Sorry, you\'re too late to watch the sunrise today.'+
-	    	 																  '\nBut you have a chance to watch the sundown, it\'s also nice :)');
+	    	 case 2: var LetterText = document.createTextNode('Sorry, you\'re too late to watch the sunrise today.'
+	    	 																 +'\nBut you have a chance to watch the sundown, it\'s also nice :)');
 	    	   break;
 	    	 default:var LetterText = document.createTextNode('What ... is it exactly, your trying to do? (:');
 	    	   break;
@@ -163,9 +163,9 @@ function generateDates() {
       
  	 //error handling
  	 }catch(err) {
- 	 	alert('Hi, im sorry to inform you that something went wrong.\n'
- 	 			+'Where?: generateDates)\n'
- 	 			+'What?: '+ err.message);
+ 	 	window.alert('Hi, im sorry to inform you that something went wrong.\n'
+ 	 				   +'Where?: generateDates)\n'
+ 	 					+'What?: '+ err.message);
  	 };
      
 };
