@@ -52,8 +52,9 @@ Date.prototype.sun_hr_per_day=function()
 	    let i_tm_isdst = this.isdst();
 	    
 	    // Achtung: yday() setzt Zeit zurück auf 0 Uhr, darum zuletzt aufrufen!!!
-	    let i_day = this.yday() - 80; // der aktuelle Tag als Zahl, relativ zum 21.3. (Frühlingsanfang, ohne Schaltjahr)
-	
+	    var d_spring  = new Date(this.getFullYear(), 2, 21); // 21.3. (Frühlingsanfang) als Zahl
+	    let i_day = this.yday() - d_spring.yday(); // der aktuelle Tag als Zahl, relativ zum 21.3.
+		
 	
 	    // sun declination
 	    let db_sun_declination = Math.atan(Math.sin(2*Math.PI*(i_day/365))*Math.tan(to_radians(23.45))); // Deklination der Sonne, Näherung
@@ -61,9 +62,9 @@ Date.prototype.sun_hr_per_day=function()
 	    
 	    //testing day length
 	    if(gbool_testing && (db_sun_hr >= gi_max_sun_hr)){
-	    	alert('Attention: Today\'s day length is about '+Math.floor(db_sun_hr)+':'+
-	    	      Math.round((db_sun_hr-Math.floor(db_sun_hr)) *60).toString().padStart(2, '0')+
-	    	      ' h.\nPlease check the Input.');
+	    	window.alert('Attention: Today\'s day length is about '+Math.floor(db_sun_hr)+':'
+	    	            +Math.round((db_sun_hr-Math.floor(db_sun_hr)) *60).toString().padStart(2, '0')
+	    	      		+' h.\nPlease check the Input.');
 	    };
 	    
 	    // sunrise
@@ -95,9 +96,9 @@ Date.prototype.sun_hr_per_day=function()
  	 
  	 //error handling
  	 }catch(err) {
- 	 	alert('Hi, im sorry to inform you that something went wrong.\n'
- 	 			+'Where?: p_sun_hr_per_day('+i_day+', '+i_tm_isdst+')\n'
- 	 			+'What?: '+ err.message);
+ 	 	window.alert('Hi, im sorry to inform you that something went wrong.\n'
+ 	 			      +'Where?: p_sun_hr_per_day('+i_day+', '+i_tm_isdst+')\n'
+ 	 				   +'What?: '+ err.message);
  	 };
 };
 
