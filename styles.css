@@ -9,6 +9,7 @@ body {
     width: 500px;
     margin: 0 auto;
     background-color: orange;
+	 font-family: sans-serif;
     padding: 20px;
 }
 
@@ -20,7 +21,7 @@ h1 {
 	font-size: 14px;
 }
 	
-p {
+p, label {
 	font-size: 12px;
 	margin-top: 20px;
 }
@@ -42,6 +43,12 @@ div#col2{
 	width: 230px;
 	float: right;
 	position: relative;
+}
+
+div#footer{
+	float: right;
+	margin-top: 30px;
+	text-align: right;
 }
 
 div.sundown{

@@ -12,7 +12,7 @@ const gi_midday_hr   = 11.5 + 2; // rechnerischer Mittag (Symmetrieachse) = 11.5
 
 
 // returns the conversion of degrees to radians
-function to_radians(db_deg)
+function deg_to_rad(db_deg)
 {
   return db_deg * Math.PI / 180; // Grad zu Radiand Umwandlung
 };
@@ -31,6 +31,12 @@ Date.prototype.yday=function()
   let newyear = new Date(this.getFullYear(), 0, 1); // Neujahrstag des aktuellen Jahres
   return Math.ceil((today - newyear) / (24*60*60*1000) + 1); // Differenz als gezählter Tag
 }
+
+// returns the "hh:mm"(string) of a dezimal time (hour)
+function dec_to_hr(i_hr) {
+	return Math.floor(i_hr)+':'+Math.round((i_hr-Math.floor(i_hr))*60).toString().padStart(2, '0');
+};
+
 
 
 /*
@@ -57,8 +63,8 @@ Date.prototype.sun_hr_per_day=function()
 		
 	
 	    // sun declination
-	    let db_sun_declination = Math.atan(Math.sin(2*Math.PI*(i_day/365))*Math.tan(to_radians(23.45))); // Deklination der Sonne, Näherung
-	    let db_sun_hr = (((Math.asin(Math.sin(db_sun_declination)*Math.tan(to_radians(gdb_latitude)))) * 2 + Math.PI)/ (2 * Math.PI)) * 24; // Tageslänge, Näherung
+	    let db_sun_declination = Math.atan(Math.sin(2*Math.PI*(i_day/365))*Math.tan(deg_to_rad(23.45))); // Deklination der Sonne, Näherung
+	    let db_sun_hr = (((Math.asin(Math.sin(db_sun_declination)*Math.tan(deg_to_rad(gdb_latitude)))) * 2 + Math.PI)/ (2 * Math.PI)) * 24; // Tageslänge, Näherung
 	    
 	    //testing day length
 	    if(gbool_testing && (db_sun_hr >= gi_max_sun_hr)){
@@ -139,10 +145,8 @@ function generateDates() {
     
       // Text: sunrise and -down time
       var p_sun = document.createElement('p');
-      var sunText = document.createTextNode('Sunrise is today approx. at '+Math.floor(gi_sunrise_hr)+':'
-      												 +Math.round((gi_sunrise_hr-Math.floor(gi_sunrise_hr))*60).toString().padStart(2, '0')
-                                           +' h,\nsundown approx. at '+Math.floor(gi_sundown_hr)+':'
-                                           +Math.round((gi_sundown_hr-Math.floor(gi_sundown_hr))*60).toString().padStart(2, '0')+' h.');
+      var sunText = document.createTextNode('Sunrise is today approx. at '+dec_to_hr(gi_sunrise_hr)
+                                           +' h,\nsundown approx. at '+dec_to_hr(gi_sundown_hr)+' h.');
       p_sun.appendChild(sunText);
       document.getElementById('col1').appendChild(p_sun);
       
@@ -170,7 +174,31 @@ function generateDates() {
      
 };
 
-window.onload = generateDates;
+// onchange date (user input)
+function getDate() {
+	
+	try{
+		
+		var d_userinput  = new Date(document.getElementById('getDate').value);// Eingabewert
+		
+		//func
+		d_userinput.sun_hr_per_day();
+		
+		//alert
+		window.alert('Sunrise on '+d_userinput.toLocaleString('de-DE', {year: 'numeric', month: '2-digit', day: '2-digit'})
+						 +' is approx. at '+dec_to_hr(gi_sunrise_hr)
+	                +' h,\nsundown approx. at '+dec_to_hr(gi_sundown_hr)+' h.');
+		
+ 	 //error handling
+ 	 }catch(err) {
+ 	 	window.alert('Hi, im sorry to inform you that something went wrong.\n'
+ 	 				   +'Where?: getDate)\n'
+ 	 					+'What?: '+ err.message);
+ 	 };
+};
 
+
+// onload
+window.onload = generateDates;
 
 
